@@ -1,5 +1,5 @@
 import numpy as np
 
-a = b = 1
+file = 'dataset.csv'
+print(file.replace('.csv', ''))
 
-print(a, b)

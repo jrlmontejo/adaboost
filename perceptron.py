@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""Perceptron learner using Pocket Algorithm
+"""Perceptron classifier using Pocket Algorithm
 
 Compiler: Python 3.6.5
 OS: macOS 10.14
@@ -18,6 +18,7 @@ def add_labels(data, label):
   Returns:
     The dataset with labels
   """
+
   size = len(data)
   labels = np.full(size, label).reshape(size, 1)
   return np.hstack((labels, data))
@@ -31,6 +32,7 @@ def divide_dataset(data):
   Returns:
     The two subsets
   """
+
   size = len(data)
   divider = int(size / 2)
   m, n = data[:divider], data[divider:]
@@ -46,6 +48,7 @@ def generate_data(mu, size):
   Returns:
     The generated data points
   """
+
   samples = np.random.normal(mu, 1, (size, len(mu)))
   return samples
 
@@ -55,6 +58,7 @@ def create_dataset():
   Returns:
     The training set and test sets
   """
+
   N = 100
 
   p_set = generate_data([0, 0], N)
@@ -144,48 +148,79 @@ def classify(training_set, maxitercnt = 10000):
   return w
 
 def predict(test_set, w):
-  """Predicts the labels of the given dataset and outputs the error rate
+  """Predicts the labels of the given dataset
 
   Parameters:
     test_set: The test set whose labels need to be predicted
     w: The weights that will be used for prediction
 
   Returns:
-    The prediction error rate
+    The expected and predicted labels
   """
 
-  N = len(test_set)
-  error = 0
+  expected = predicted = np.array([])
 
   for instance in test_set:
     x, y = get_input(instance)
     y_hat = get_label(x, w)
 
-    # print('Predicted: {} Expected: {}\n'.format(int(y_hat), int(y)))
+    expected = np.append(expected, y)
+    predicted = np.append(predicted, y_hat)
 
-    if y * y_hat < 0:
-      error = error + 1
+  return expected, predicted
 
-  print('Total # of errors over {} test samples: {}'.format(N, error))
-  error_rate = error / N
-  return error_rate
+def sse(expected, predicted):
+  """Measure the sum of squared error
+
+  Parameters:
+    expected: The actual labels
+    predicted: The predicted labels
+
+  Returns:
+    The sum of squared error
+  """
+
+  return np.sum((expected - predicted) ** 2)
+
+def error_rate(expected, predicted):
+  """Calculate the error rate i.e. the number of misclassified samples
+
+  Parameters:
+    expected: The actual labels
+    predicted: The predicted labels
+
+  Returns:
+    The error rate
+  """
+
+  N = len(expected)
+  errors = np.count_nonzero(expected != predicted)
+
+  print('Total # of errors over {} test samples: {}'.format(N, errors))
+  return errors / N
 
 def start():
   """Main
   """
 
-  print('Generating dataset...')
+  print('** START POCKET ALGORITHM **\n')
+  print('Generating training and test sets...\n')
   training_set, test_set = create_dataset()
 
-  print('Determining weights using pocket algorithm...')
+  print('Determining weights using pocket algorithm...\n')
   weights = classify(training_set)
 
-  print('Testing on test set...')
-  error_rate = predict(test_set, weights)
+  print('Testing on test set...\n')
+  expected, predicted = predict(test_set, weights)
 
-  print('Error rate: {}'.format(error_rate))
+  print('Error rate: {}\n'.format(error_rate(expected, predicted)))
+  print('Sum of Squared Errors: {}'.format(sse(expected, predicted)))
 
-start()
+  print('** END POCKET ALGORITHM **\n')
+
+# run when not imported
+if __name__ == "__main__":
+  start()
 
 
 
