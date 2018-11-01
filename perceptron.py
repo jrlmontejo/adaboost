@@ -158,16 +158,17 @@ def predict(test_set, w):
     The expected and predicted labels
   """
 
-  expected = predicted = np.array([])
+  expected = []
+  predicted = []
 
   for instance in test_set:
     x, y = get_input(instance)
     y_hat = get_label(x, w)
 
-    expected = np.append(expected, y)
-    predicted = np.append(predicted, y_hat)
+    expected.append(y)
+    predicted.append(y_hat)
 
-  return expected, predicted
+  return np.array(expected), np.array(predicted)
 
 def sse(expected, predicted):
   """Measure the sum of squared error

@@ -82,6 +82,8 @@ def adabpredict(test_set, alphas, params):
   expected = []
   predicted = []
 
+  print('Running predictions on test set...')
+
   for instance in test_set:
     x, y = perceptron.get_input(instance)
     h = np.array([perceptron.get_label(x, w) for w in params])
@@ -100,44 +102,6 @@ def adabpredict(test_set, alphas, params):
     print('Accuracy @ K = {}: {}'.format(k, acc))
 
   return accuracies
-
-# def adabpredict(test_set, alphas, params):
-#   """Predicts the labels using the Adaboost classifier
-
-#   Parameters:
-#     test_set: The test set
-#     alphas: The generated alpha values
-#     params: The model parameters i.e. weight vectors
-
-#   Returns:
-#     The list of accuracies over K learners where K = 10, 20, ..., 1000
-#   """
-
-#   N = len(test_set)
-#   accuracies = []
-
-#   # initialize number of learners to track
-#   start, end = 10, 1000
-#   K = np.arange(start, end + start, step = start)
-
-#   for k in K:
-#     alphas_k, params_k = alphas[:k], params[:k]
-#     expected = predicted = np.array([])
-
-#     for instance in test_set:
-#       x, y = perceptron.get_input(instance)
-#       h = [perceptron.get_label(x, w) for w in params_k]
-#       y_hat = np.sign(np.dot(alphas_k, h))
-
-#       expected = np.append(expected, y)
-#       predicted = np.append(predicted, y_hat)
-
-#     acc = np.count_nonzero(expected == predicted) / N
-#     accuracies.append((k, acc))
-
-#     print('Accuracy @ K = {}: {}'.format(k, acc))
-
-#   return accuracies
 
 def adabrun(dataset_file, train_size, test_size):
   """Runs the Adaboost training and classification on the given dataset
@@ -174,7 +138,7 @@ def adabrun(dataset_file, train_size, test_size):
   np.savetxt(test_output, test_accuracies, delimiter = ',', fmt = '%f')
   print('Accuracies saved to {}'.format(test_output))
 
-  print('** END ADABOOST **\n')
+  print('\n** END ADABOOST **\n')
 
 def start():
   """Main
