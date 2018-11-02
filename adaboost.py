@@ -7,7 +7,8 @@ OS: macOS 10.14
 """
 
 import numpy as np
-import perceptron
+import pocket
+import time
 
 def adabtrain(training_set, K = 1000):
   """Trains the Adaboost classifier
@@ -30,16 +31,18 @@ def adabtrain(training_set, K = 1000):
   alphas = []
   params = []
 
+  t_start = time.time()
+
   for t in range(0, K):
     # get sample w/ replacement S according to w
     S = np.take(training_set, np.random.choice(N, N, p = w), axis = 0)
 
     # train S using perceptron
-    weights = perceptron.classify(S)
+    weights = pocket.classify(S)
     params.append(weights)
 
     # classify training set
-    expected, predicted = perceptron.predict(training_set, weights)
+    expected, predicted = pocket.predict(training_set, weights)
 
     # compute deltas
     deltas = (expected != predicted).astype(int)
@@ -58,7 +61,10 @@ def adabtrain(training_set, K = 1000):
 
     print('Error @ iteration {}: {}'.format(t + 1, epsilon))
 
-  return alphas, params
+  t_end = time.time()
+  training_time = t_end - t_start
+
+  return alphas, params, training_time
 
 def adabpredict(test_set, alphas, params):
   """Predicts the labels using the Adaboost classifier
@@ -75,7 +81,8 @@ def adabpredict(test_set, alphas, params):
   N = len(test_set)
 
   # initialize number of learners to track
-  K = np.arange(10, 1010, step = 10)
+  k_start, k_end = 10, 1000
+  K = np.arange(k_start, k_end + k_start, step = 10)
 
   # initialize storage
   accuracies = []
@@ -84,14 +91,18 @@ def adabpredict(test_set, alphas, params):
 
   print('Running predictions on test set...')
 
+  t_start = time.time()
+
   for instance in test_set:
-    x, y = perceptron.get_input(instance)
-    h = np.array([perceptron.get_label(x, w) for w in params])
+    x, y = pocket.get_input(instance)
+    h = np.array([pocket.get_label(x, w) for w in params])
     sums = np.cumsum(alphas * h)
     y_hats = np.sign(sums)
 
     expected.append(y)
     predicted.append(y_hats)
+
+  t_end = time.time()
 
   for k in K:
     y = np.array(expected)
@@ -101,9 +112,11 @@ def adabpredict(test_set, alphas, params):
 
     print('Accuracy @ K = {}: {}'.format(k, acc))
 
-  return accuracies
+  testing_time = t_end - t_start
 
-def adabrun(dataset_file, train_size, test_size):
+  return accuracies, testing_time
+
+def adabrun(dataset_file, partition = 400):
   """Runs the Adaboost training and classification on the given dataset
 
   Parameters:
@@ -118,17 +131,20 @@ def adabrun(dataset_file, train_size, test_size):
   dataset = np.genfromtxt(dataset_file, delimiter = ',')
   np.random.shuffle(dataset)
 
-  training_set = dataset[:train_size]
-  test_set = dataset[train_size:train_size + test_size]
+  training_set = dataset[:partition]
+  test_set = dataset[partition:]
 
   print('\nTraining on {}...'.format(dataset_file))
-  alphas, params = adabtrain(training_set)
+  alphas, params, training_time = adabtrain(training_set)
+  print('\nTraining time ({} samples): {} seconds'.format(len(training_set), training_time))
 
   print('\nTesting classifier on {} training set...'.format(dataset_file))
-  train_accuracies = adabpredict(training_set, alphas, params)
+  train_accuracies, testing_time = adabpredict(training_set, alphas, params)
+  print('\nTesting time ({} samples): {} seconds'.format(len(training_set), testing_time))
 
   print('\nTesting classifier on {} test set...'.format(dataset_file))
-  test_accuracies = adabpredict(test_set, alphas, params)
+  test_accuracies, testing_time = adabpredict(test_set, alphas, params)
+  print('\nTesting time ({} samples): {} seconds'.format(len(test_set), testing_time))
 
   train_output = 'train_accuracies_{}'.format(dataset_file)
   np.savetxt(train_output, train_accuracies, delimiter = ',', fmt = '%f')
@@ -144,8 +160,8 @@ def start():
   """Main
   """
 
-  adabrun('banana_data.csv', 400, 4900)
-  adabrun('splice_data.csv', 1000, 2175)
+  adabrun('banana_data.csv', partition = 400)
+  adabrun('splice_data.csv', partition = 1000)
 
 # run when not imported
 if __name__ == "__main__":
