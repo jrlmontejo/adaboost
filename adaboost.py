@@ -96,6 +96,8 @@ def adabpredict(test_set, alphas, params):
   for instance in test_set:
     x, y = pocket.get_input(instance)
     h = np.array([pocket.get_label(x, w) for w in params])
+
+    # get cumulative sum so predictions are saved every k learner
     sums = np.cumsum(alphas * h)
     y_hats = np.sign(sums)
 
